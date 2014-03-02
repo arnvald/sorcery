@@ -1,8 +1,9 @@
 AppRoot::Application.routes.draw do
-  root :to => "application#index"
+  root :to => "sorcery#index"
 
   controller :sorcery do
     get :test_login
+    post :integration_test_login
     get :test_logout
     get :some_action
     post :test_return_to

@@ -23,6 +23,14 @@ class SorceryController < ActionController::Base
     render nothing: true
   end
 
+  def integration_test_login
+    if @user = login(params[:email], params[:password])
+      render text: "logged in correctly, #{current_user.email}"
+    else
+      render text: "error, not logged in"
+    end
+  end
+
   def test_auto_login
     @user = User.find(:first)
     auto_login(@user)

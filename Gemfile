@@ -14,6 +14,7 @@ gem "rails", "~> 3.2.15"
 gem 'json', ">= 1.7.7"
 gem "rspec", "~> 2.14.0"
 gem 'rspec-rails', "~> 2.14.0"
+gem 'capybara'
 gem 'sqlite3'
 gem "yard", "~> 0.6.0"
 gem "bundler", ">= 1.1.0"

@@ -12,10 +12,10 @@ SORCERY_ORM = (ENV["SORCERY_ORM"] || :active_record).to_sym
 require 'rspec'
 
 require 'rails/all'
+require "rails_app/config/environment"
+
 require 'rspec/rails'
 require 'timecop'
-
-require "rails_app/config/environment"
 
 require "orm/#{SORCERY_ORM}"
 

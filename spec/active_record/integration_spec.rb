@@ -1,23 +1,27 @@
 require 'spec_helper'
 
-describe "the login process", :type => :request do
+describe "the login process", :type => :feature do
   before(:all) do
     sorcery_reload!
     create_new_user
   end
 
-  after(:all) do
+  it "handles unverified request" do
+    visit root_path
+    page.find("input[name='authenticity_token']").set("incorrect_token")
+    fill_in 'Email', with: 'bla@bla.com'
+    fill_in 'Password', with: 'secret'
+    click_button 'Login'
+
+    expect(page).to have_content "error, not logged in"
+  end
+
+  it "logs user correctly" do
+    visit root_path
+    fill_in 'Email', with: 'bla@bla.com'
+    fill_in 'Password', with: 'secret'
+    click_button 'Login'
+
+    expect(page).to have_content "logged in correctly"
   end
 end
-#   it "handles unverified request", :js => true do
-#     visit root_path
-#     #save_and_open_page
-#     fill_in 'Username', :with => 'gizmo1'
-#     fill_in 'Password', :with => 'secret'
-#     # <input name="authenticity_token" type="hidden" value="+8M9lXnjnhAW/mAuzwI9Mmy6hM+00qZJa8VMQUg+NmM=">
-#     page.execute_script("$$('hidden').value='mezuza'")
-#     #save_and_open_page
-#     click_button 'Login'
-#     save_and_open_page
-#   end
-# end
