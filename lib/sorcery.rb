@@ -2,6 +2,7 @@ module Sorcery
   autoload :Model, 'sorcery/model'
   module Model
     autoload :TemporaryToken, 'sorcery/model/temporary_token'
+    autoload :Config, 'sorcery/model/config'
     module Adapters
       autoload :ActiveRecord, 'sorcery/model/adapters/active_record'
       autoload :Mongoid, 'sorcery/model/adapters/mongoid'
