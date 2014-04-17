@@ -7,6 +7,7 @@ module Sorcery
       # When using this submodule, supplying a mailer is mandatory.
       module UserActivation
         def self.included(base)
+
           base.sorcery_config.class_eval do
             attr_accessor :activation_state_attribute_name,               # the attribute name to hold activation state
                                                                           # (active/pending).
@@ -50,40 +51,12 @@ module Sorcery
             reset!
           end
 
-          base.class_eval do
-            if defined?(DataMapper) && self.ancestors.include?(DataMapper::Resource)
-              before :valid? do
-                if self.send(sorcery_config.password_attribute_name).present?
-                  setup_activation
-                end
-              end
-              after :create do
-                if send_activation_needed_email?
-                  send_activation_needed_email!
-                end
-              end
-            else
-              # don't setup activation if no password supplied - this user is created automatically
-              before_create :setup_activation, :if => Proc.new { |user| user.send(sorcery_config.password_attribute_name).present? }
-              # don't send activation needed email if no crypted password created - this user is external (OAuth etc.)
-              after_create  :send_activation_needed_email!, :if => :send_activation_needed_email?
-            end
-          end
-
           base.sorcery_config.after_config << :validate_mailer_defined
-          base.sorcery_config.after_config << :define_user_activation_mongoid_fields if defined?(Mongoid) and base.ancestors.include?(Mongoid::Document)
-          if defined?(MongoMapper) and base.ancestors.include?(MongoMapper::Document)
-            base.sorcery_config.after_config << :define_user_activation_mongo_mapper_fields
-          end
-          if defined?(DataMapper) and base.ancestors.include?(DataMapper::Resource)
-            base.sorcery_config.after_config << :define_user_activation_datamapper_fields
-          end
+
           base.sorcery_config.before_authenticate << :prevent_non_active_login
 
           base.extend(ClassMethods)
           base.send(:include, InstanceMethods)
-
-
         end
 
         module ClassMethods
@@ -104,34 +77,8 @@ module Sorcery
             raise ArgumentError, msg if @sorcery_config.user_activation_mailer == nil and @sorcery_config.activation_mailer_disabled == false
           end
 
-          def define_user_activation_mongoid_fields
-            self.class_eval do
-              field sorcery_config.activation_state_attribute_name,            :type => String
-              field sorcery_config.activation_token_attribute_name,            :type => String
-              field sorcery_config.activation_token_expires_at_attribute_name, :type => Time
-            end
-          end
-
           def define_user_activation_mongo_mapper_fields
             self.class_eval do
-              key sorcery_config.activation_state_attribute_name, String
-              key sorcery_config.activation_token_attribute_name, String
-              key sorcery_config.activation_token_expires_at_attribute_name, Time
-            end
-          end
-
-          def define_user_activation_datamapper_fields
-            self.class_eval do
-              property sorcery_config.activation_state_attribute_name,            String
-              property sorcery_config.activation_token_attribute_name,            String
-              property sorcery_config.activation_token_expires_at_attribute_name, Time
-              [sorcery_config.activation_token_expires_at_attribute_name].each do |sym|
-                alias_method "orig_#{sym}", sym
-                define_method(sym) do
-                  t = send("orig_#{sym}")
-                  t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
-                end
-              end
             end
           end
         end

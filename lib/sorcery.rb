@@ -57,7 +57,6 @@ module Sorcery
 
   if defined?(ActiveRecord)
     ActiveRecord::Base.send(:include, Sorcery::Model)
-    ActiveRecord::Base.send(:include, Sorcery::Model::Adapters::ActiveRecord)
   end
 
   if defined?(Mongoid)
@@ -65,18 +64,22 @@ module Sorcery
       included do
         attr_reader :new_record
         include Sorcery::Model
-        include Sorcery::Model::Adapters::Mongoid
       end
     end
   end
 
   if defined?(MongoMapper)
-    MongoMapper::Document.send(:plugin, Sorcery::Model::Adapters::MongoMapper)
+    MongoMapper::Document.module_eval do
+      included do
+        include Sorcery::Model
+      end
+    end
   end
 
   if defined?(DataMapper)
-    DataMapper::Model.append_inclusions(Sorcery::Model, Sorcery::Model::Adapters::DataMapper)
+    DataMapper::Model.append_inclusions(Sorcery::Model)
   end
+
 
   require 'sorcery/engine' if defined?(Rails) && Rails::VERSION::MAJOR >= 3
 end

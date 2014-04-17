@@ -5,6 +5,15 @@ module Sorcery
         def self.included(klass)
           klass.extend ClassMethods
           klass.send(:include, InstanceMethods)
+
+          klass.class_eval do
+            sorcery_config.username_attribute_names.each do |username|
+              field username,         :type => String
+            end
+            field sorcery_config.email_attribute_name,            :type => String unless sorcery_config.username_attribute_names.include?(sorcery_config.email_attribute_name)
+            field sorcery_config.crypted_password_attribute_name, :type => String
+            field sorcery_config.salt_attribute_name,             :type => String
+          end
         end
 
         module InstanceMethods
@@ -45,7 +54,6 @@ module Sorcery
           end
 
           def find_by_provider_and_uid(provider, uid)
-            @user_klass ||= ::Sorcery::Controller::Config.user_class.to_s.constantize
             where(@user_klass.sorcery_config.provider_attribute_name => provider, @user_klass.sorcery_config.provider_uid_attribute_name => uid).first
           end
 
@@ -85,6 +93,53 @@ module Sorcery
             where(config.last_activity_at_attribute_name.ne => nil) \
             .where("this.#{config.last_logout_at_attribute_name} == null || this.#{config.last_activity_at_attribute_name} > this.#{config.last_logout_at_attribute_name}") \
             .where(config.last_activity_at_attribute_name.gt => config.activity_timeout.seconds.ago.utc).order_by([:_id,:asc])
+          end
+
+          # ===========================
+          # = Submodules initializers =
+          # ===========================
+
+          def init_sorcery_brute_force_protection
+            field sorcery_config.failed_logins_count_attribute_name,  :type => Integer, :default => 0
+            field sorcery_config.lock_expires_at_attribute_name,      :type => Time
+            field sorcery_config.unlock_token_attribute_name,         :type => String
+          end
+
+          def init_sorcery_user_activation
+            field sorcery_config.activation_state_attribute_name,            :type => String
+            field sorcery_config.activation_token_attribute_name,            :type => String
+            field sorcery_config.activation_token_expires_at_attribute_name, :type => Time
+
+            before_create :setup_activation, :if => Proc.new { |user| user.send(sorcery_config.password_attribute_name).present? }
+            after_create  :send_activation_needed_email!, :if => :send_activation_needed_email?
+          end
+
+          def init_sorcery_activity_logging
+            field sorcery_config.last_login_at_attribute_name,    :type => Time
+            field sorcery_config.last_logout_at_attribute_name,   :type => Time
+            field sorcery_config.last_activity_at_attribute_name, :type => Time
+            field sorcery_config.last_login_from_ip_address_name, :type => String
+          end
+
+          def init_sorcery_remember_me
+            field sorcery_config.remember_me_token_attribute_name,            :type => String
+            field sorcery_config.remember_me_token_expires_at_attribute_name, :type => Time
+          end
+
+          def init_sorcery_reset_password
+            field sorcery_config.reset_password_token_attribute_name,             :type => String
+            field sorcery_config.reset_password_token_expires_at_attribute_name,  :type => Time
+            field sorcery_config.reset_password_email_sent_at_attribute_name,     :type => Time
+          end
+
+          def init_sorcery_hooks
+            attr_accessor @sorcery_config.password_attribute_name
+            before_save :encrypt_password, :if => Proc.new { |record|
+              record.send(sorcery_config.password_attribute_name).present?
+            }
+            after_save :clear_virtual_password, :if => Proc.new { |record|
+              record.send(sorcery_config.password_attribute_name).present?
+            }
           end
         end
       end

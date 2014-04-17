@@ -5,7 +5,9 @@ module Sorcery
   module Model
     class Config
 
-      attr_accessor :username_attribute_names,           # change default username attribute, for example, to use :email
+      attr_accessor :adapter,                           # ORM adapter's class
+
+                    :username_attribute_names,          # change default username attribute, for example, to use :email
                                                         # as the login.
 
                     :password_attribute_name,           # change *virtual* password attribute, the one which is used
@@ -39,6 +41,7 @@ module Sorcery
 
       def initialize
         @defaults = {
+          :@adapter                              => nil,
           :@submodules                           => [],
           :@username_attribute_names              => [:email],
           :@password_attribute_name              => :password,

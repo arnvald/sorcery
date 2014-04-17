@@ -5,6 +5,18 @@ module Sorcery
         def self.included(klass)
           klass.extend ClassMethods
           klass.send(:include, InstanceMethods)
+
+          klass.class_eval do
+            sorcery_config.username_attribute_names.each do |username|
+              property username, String, :length => 255
+            end
+            unless sorcery_config.username_attribute_names.include?(sorcery_config.email_attribute_name)
+              property sorcery_config.email_attribute_name, String, :length => 255
+            end
+            property sorcery_config.crypted_password_attribute_name, String, :length => 255
+            property sorcery_config.salt_attribute_name, String, :length => 255
+          end
+
         end
 
         module InstanceMethods
@@ -116,6 +128,100 @@ module Sorcery
             ret = ret.all(config.last_activity_at_attribute_name.gt => config.activity_timeout.seconds.ago.utc)
             ret
           end
+
+          # ===========================
+          # = Submodules initializers =
+          # ===========================
+
+          def init_sorcery_brute_force_protection
+            property sorcery_config.failed_logins_count_attribute_name, Integer, :default => 0
+            property sorcery_config.lock_expires_at_attribute_name,     Time
+            property sorcery_config.unlock_token_attribute_name,        String
+            [sorcery_config.lock_expires_at_attribute_name].each do |sym|
+              alias_method "orig_#{sym}", sym
+              define_method(sym) do
+                t = send("orig_#{sym}")
+                t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
+              end
+            end
+          end
+
+          def init_sorcery_user_activation
+            property sorcery_config.activation_state_attribute_name,            String
+            property sorcery_config.activation_token_attribute_name,            String
+            property sorcery_config.activation_token_expires_at_attribute_name, Time
+            [sorcery_config.activation_token_expires_at_attribute_name].each do |sym|
+              alias_method "orig_#{sym}", sym
+              define_method(sym) do
+                t = send("orig_#{sym}")
+                t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
+              end
+            end
+
+            before :valid? do
+              setup_activation if self.send(sorcery_config.password_attribute_name).present?
+            end
+            after :create do
+              send_activation_needed_email!  if send_activation_needed_email?
+            end
+          end
+
+          def init_sorcery_activity_logging
+            unless repository.adapter.is_a?(::DataMapper::Adapters::MysqlAdapter)
+              raise 'Unsupported DataMapper Adapter'
+            end
+
+            property sorcery_config.last_login_at_attribute_name,    Time
+            property sorcery_config.last_logout_at_attribute_name,   Time
+            property sorcery_config.last_activity_at_attribute_name, Time
+            property sorcery_config.last_login_from_ip_address_name, String
+            # Workaround local timezone retrieval problem NOTE dm-core issue #193
+            [sorcery_config.last_login_at_attribute_name,
+             sorcery_config.last_logout_at_attribute_name,
+             sorcery_config.last_activity_at_attribute_name].each do |sym|
+               alias_method "orig_#{sym}", sym
+               define_method(sym) do
+                 t = send("orig_#{sym}")
+                 t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
+               end
+             end
+          end
+
+          def init_sorcery_remember_me
+            property sorcery_config.remember_me_token_attribute_name,            String
+            property sorcery_config.remember_me_token_expires_at_attribute_name, Time
+            [sorcery_config.remember_me_token_expires_at_attribute_name].each do |sym|
+              alias_method "orig_#{sym}", sym
+              define_method(sym) do
+                t = send("orig_#{sym}")
+                t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
+              end
+            end
+          end
+
+          def init_sorcery_reset_password
+            property sorcery_config.reset_password_token_attribute_name,            String
+            property sorcery_config.reset_password_token_expires_at_attribute_name, Time
+            property sorcery_config.reset_password_email_sent_at_attribute_name,    Time
+            [sorcery_config.reset_password_token_expires_at_attribute_name,
+             sorcery_config.reset_password_email_sent_at_attribute_name].each do |sym|
+               alias_method "orig_#{sym}", sym
+               define_method(sym) do
+                 t = send("orig_#{sym}")
+                 t && Time.new(t.year, t.month, t.day, t.hour, t.min, t.sec, 0)
+               end
+            end
+          end
+
+          def init_sorcery_hooks
+            before :valid? do
+              encrypt_password if self.send(sorcery_config.password_attribute_name).present?
+            end
+            after :save do
+              clear_virtual_password if self.send(sorcery_config.password_attribute_name).present?
+            end
+          end
+
         end
       end
     end

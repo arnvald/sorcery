@@ -47,6 +47,21 @@ module Sorcery
             .where("#{config.last_logout_at_attribute_name} IS NULL OR #{config.last_activity_at_attribute_name} > #{config.last_logout_at_attribute_name}") \
             .where("#{config.last_activity_at_attribute_name} > ? ", config.activity_timeout.seconds.ago.utc.to_s(:db))
           end
+
+          def init_sorcery_hooks
+            attr_accessor @sorcery_config.password_attribute_name
+            before_save :encrypt_password, :if => Proc.new { |record|
+              record.send(sorcery_config.password_attribute_name).present?
+            }
+            after_save :clear_virtual_password, :if => Proc.new { |record|
+              record.send(sorcery_config.password_attribute_name).present?
+            }
+          end
+
+          def init_sorcery_user_activation
+            before_create :setup_activation, :if => Proc.new { |user| user.send(sorcery_config.password_attribute_name).present? }
+            after_create  :send_activation_needed_email!, :if => :send_activation_needed_email?
+          end
         end
       end
     end
