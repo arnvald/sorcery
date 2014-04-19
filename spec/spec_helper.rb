@@ -39,10 +39,6 @@ RSpec.configure do |config|
       DataMapper.auto_migrate!
       DataMapper.finalize
     end
-
-    if defined?(Mongoid)
-      Mongoid.purge!
-    end
   end
 
   config.after(:suite) do

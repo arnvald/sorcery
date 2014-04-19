@@ -24,10 +24,9 @@ module Sorcery
             # This runs the options block set in the initializer on the model class.
             ::Sorcery::Controller::Config.user_config.tap{|blk| blk.call(@sorcery_config) if blk}
 
-            load_adapter
-
-            init_sorcery_hooks
-            init_sorcery_submodules
+            initializer = "#{@sorcery_config.adapter}::Initializer".constantize.new(self)
+            initializer.init_sorcery
+            initializer.init_sorcery_submodules(::Sorcery::Controller::Config.submodules)
 
             attr_accessor @sorcery_config.password_attribute_name
 
@@ -37,30 +36,11 @@ module Sorcery
 
           protected
 
-          def load_adapter
-            if defined?(ActiveRecord)
-              self.send :include, Sorcery::Model::Adapters::ActiveRecord
-            end
-
-            if defined?(Mongoid)
-              self.send :include, Sorcery::Model::Adapters::Mongoid
-            end
-
-            if defined?(DataMapper)
-              self.send :include, Sorcery::Model::Adapters::DataMapper
-            end
-
-            if defined?(MongoMapper)
-              self.send :include, Sorcery::Model::Adapters::MongoMapper
-            end
-          end
-
           # includes required submodules into the model class,
           # which usually is called User.
           def include_required_submodules!
             self.class_eval do
-              @sorcery_config.submodules = ::Sorcery::Controller::Config.submodules
-              @sorcery_config.submodules.each do |mod|
+              ::Sorcery::Controller::Config.submodules.each do |mod|
                 begin
                   include Submodules.const_get(mod.to_s.split('_').map {|p| p.capitalize}.join)
                 rescue NameError
@@ -68,13 +48,6 @@ module Sorcery
                   # in the controller side.
                 end
               end
-            end
-          end
-
-          def init_sorcery_submodules
-            ::Sorcery::Controller::Config.submodules.each do |mod|
-              method_name = "init_sorcery_#{mod}"
-              send(method_name) if respond_to? method_name
             end
           end
 

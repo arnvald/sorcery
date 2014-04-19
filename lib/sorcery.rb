@@ -5,7 +5,6 @@ module Sorcery
     autoload :Config, 'sorcery/model/config'
     module Adapters
       autoload :ActiveRecord, 'sorcery/model/adapters/active_record'
-      autoload :Mongoid, 'sorcery/model/adapters/mongoid'
       autoload :MongoMapper, 'sorcery/model/adapters/mongo_mapper'
       autoload :DataMapper, 'sorcery/model/adapters/datamapper'
     end
@@ -55,32 +54,6 @@ module Sorcery
     end
 
   end
-
-  if defined?(ActiveRecord)
-    ActiveRecord::Base.send(:include, Sorcery::Model)
-  end
-
-  if defined?(Mongoid)
-    Mongoid::Document.module_eval do
-      included do
-        attr_reader :new_record
-        include Sorcery::Model
-      end
-    end
-  end
-
-  if defined?(MongoMapper)
-    MongoMapper::Document.module_eval do
-      included do
-        include Sorcery::Model
-      end
-    end
-  end
-
-  if defined?(DataMapper)
-    DataMapper::Model.append_inclusions(Sorcery::Model)
-  end
-
 
   require 'sorcery/engine' if defined?(Rails) && Rails::VERSION::MAJOR >= 3
 end
