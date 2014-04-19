@@ -61,10 +61,10 @@ module Sorcery
 
   if defined?(Mongoid)
     Mongoid::Document.module_eval do
-      included do
-        attr_reader :new_record
-        include Sorcery::Model
-        include Sorcery::Model::Adapters::Mongoid
+      def self.included(klass)
+        klass.send :attr_reader, :new_record
+        klass.send :include, Sorcery::Model
+        klass.send :include, Sorcery::Model::Adapters::Mongoid
       end
     end
   end

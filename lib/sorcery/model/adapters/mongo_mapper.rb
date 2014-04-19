@@ -4,8 +4,8 @@ module Sorcery
       module MongoMapper
         extend ActiveSupport::Concern
 
-        included do
-          include Sorcery::Model
+        def self.included(klass)
+          klass.send :include, Sorcery::Model
         end
 
         def increment(attr)
