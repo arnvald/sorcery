@@ -20,6 +20,7 @@ module Sorcery
   end
   autoload :Controller, 'sorcery/controller'
   module Controller
+    autoload :Config, 'sorcery/controller/config'
     module Submodules
       autoload :RememberMe, 'sorcery/controller/submodules/remember_me'
       autoload :SessionTimeout, 'sorcery/controller/submodules/session_timeout'
