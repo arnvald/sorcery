@@ -3,20 +3,22 @@ module Sorcery
     module Config
       class << self
         attr_accessor :submodules,
-                      :user_class,                    # what class to use as the user class.
-                      :not_authenticated_action,      # what controller action to call for non-authenticated users.
+                      :user_class,               # what class to use as the user class.
+                      :not_authenticated_action, # what controller action to call for non-authenticated users.
 
-                      :save_return_to_url,            # when a non logged in user tries to enter a page that requires
-                                                      # login, save the URL he wanted to reach,
-                                                      # and send him there after login.
+                      :save_return_to_url,       # when a non logged in user tries to enter a page that requires
+                                                 # login, save the URL he wanted to reach,
+                                                 # and send him there after login.
 
-                      :cookie_domain,                 # set domain option for cookies
+                      :cookie_domain,            # set domain option for cookies
 
                       :login_sources,
                       :after_login,
                       :after_failed_login,
                       :before_logout,
-                      :after_logout
+                      :after_logout,
+                      :reset_whole_session,      # clears also non-sorcery session attributes
+                      :use_legacy_session        # checks also :user_id key to log user in from session
 
         def init!
           @defaults = {
@@ -29,7 +31,9 @@ module Sorcery
             :@before_logout                        => [],
             :@after_logout                         => [],
             :@save_return_to_url                   => true,
-            :@cookie_domain                        => nil
+            :@cookie_domain                        => nil,
+            :@reset_whole_session                  => true,
+            :@use_legacy_session                   => true
           }
         end
 

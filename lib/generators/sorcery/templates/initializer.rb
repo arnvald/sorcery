@@ -27,6 +27,23 @@ Rails.application.config.sorcery.configure do |config|
   # config.cookie_domain =
 
 
+  # Sorcery will check also for :user_id session key when authenticating user from
+  # session. This is legacy behaviour and should be switched to false as soon as
+  # possible. However, disabling this setting will make invalidate all sessions
+  # of users who did not log in since Sorcery was updated to 0.9.1+
+  # Default: `true`
+  #
+  # config.use_legacy_session =
+
+
+  # Sorcery will reset all session fields after user logs out, also non-sorcery
+  # fields.  **Beware** before you set this setting to `false`, you need to disable
+  # `use_legacy_session` setting, otherwise users won't be able to log out!
+  # Default: `true`
+  #
+  # config.reset_whole_session =
+
+
   # Allow the remember_me cookie to be set through AJAX
   # Default: `true`
   #
@@ -173,6 +190,7 @@ Rails.application.config.sorcery.configure do |config|
 
   # --- user config ---
   config.user_config do |user|
+
     # -- core --
     # specify username attributes, for example: [:username, :email].
     # Default: `[:email]`

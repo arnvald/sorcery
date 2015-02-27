@@ -21,7 +21,7 @@ module Sorcery
       # If all attempts to auto-login fail, the failure callback will be called.
       def require_login
         if !logged_in?
-          session[:return_to_url] = request.url if Config.save_return_to_url && request.get?
+          session[:sorcery_return_to_url] = request.url if Config.save_return_to_url && request.get?
           self.send(Config.not_authenticated_action)
         end
       end
@@ -52,7 +52,11 @@ module Sorcery
       # hotfix for https://github.com/NoamB/sorcery/issues/464
       # can be removed when Rails 4.1 is out
       def reset_sorcery_session
-        reset_session # protect from session fixation attacks
+        if Config.reset_whole_session
+          reset_session # protect from session fixation attacks
+        else
+          session.keys.each { |k| session.delete(k) if k =~ /\Asorcery_/ }
+        end
       rescue NoMethodError
       end
 
@@ -87,8 +91,8 @@ module Sorcery
       # used when a user tries to access a page while logged out, is asked to login,
       # and we want to return him back to the page he originally wanted.
       def redirect_back_or_to(url, flash_hash = {})
-        redirect_to(session[:return_to_url] || url, :flash => flash_hash)
-        session[:return_to_url] = nil
+        redirect_to(session[:sorcery_return_to_url] || url, :flash => flash_hash)
+        session[:sorcery_return_to_url] = nil
       end
 
       # The default action for denying non-authenticated users.
@@ -103,7 +107,7 @@ module Sorcery
       # @param [<User-Model>] user the user instance.
       # @return - do not depend on the return value.
       def auto_login(user, should_remember = false)
-        session[:user_id] = user.id.to_s
+        session[:sorcery_user_id] = user.id.to_s
         @current_user = user
       end
 
@@ -126,9 +130,15 @@ module Sorcery
       end
 
       def login_from_session
-        @current_user = if session[:user_id]
-                          user_class.sorcery_adapter.find_by_id(session[:user_id])
-                        end
+        @current_user = user_class.sorcery_adapter.find_by_id(session_user_id) if session_user_id
+      end
+
+      def session_user_id
+        if Config.use_legacy_session
+          session[:sorcery_user_id] || session[:user_id]
+        else
+          session[:sorcery_user_id]
+        end
       end
 
       def after_login!(user, credentials = [])
@@ -153,5 +163,5 @@ module Sorcery
 
     end
 
-	end
+  end
 end
