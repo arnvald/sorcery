@@ -62,7 +62,7 @@ describe SorceryController do
 
       get :test_http_basic_auth, nil, http_authentication_used: true
 
-      expect(session[:user_id]).to eq "42"
+      expect(session[:sorcery_user_id]).to eq "42"
     end
   end
 end

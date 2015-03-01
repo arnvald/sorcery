@@ -85,7 +85,7 @@ describe SorceryController do
 
     it "on successful 'login_from' the user is redirected to the url he originally wanted" do
       expect(User).to receive(:load_from_provider).with(:twitter, '123').and_return(user)
-      get :test_return_to_with_external, {}, :return_to_url => "fuu"
+      get :test_return_to_with_external, {}, :sorcery_return_to_url => "fuu"
       expect(response).to redirect_to("fuu")
       expect(flash[:notice]).to eq "Success!"
     end
@@ -223,7 +223,7 @@ describe SorceryController do
         expect(User).to receive(:load_from_provider).with(:twitter, '123').and_return(user)
         get :test_login_from
 
-        expect(session[:user_id]).not_to be_nil
+        expect(session[:sorcery_user_id]).not_to be_nil
         expect(flash[:notice]).to eq "Success!"
       end
 
@@ -232,7 +232,7 @@ describe SorceryController do
         Timecop.travel(Time.now.in_time_zone+0.6)
         get :test_should_be_logged_in
 
-        expect(session[:user_id]).to be_nil
+        expect(session[:sorcery_user_id]).to be_nil
         expect(response).to be_a_redirect
       end
     end

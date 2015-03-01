@@ -54,7 +54,7 @@ describe SorceryController do
       get :test_login, :email => 'bla@bla.com', :password => 'secret'
 
       expect(assigns[:user]).to eq user
-      expect(session[:user_id]).to eq "42"
+      expect(session[:sorcery_user_id]).to eq "42"
     end
 
     it "login(email,password) returns the user when success and set the session with user.id" do
@@ -63,7 +63,7 @@ describe SorceryController do
       get :test_login, :email => 'bla@bla.com', :password => 'secret'
 
       expect(assigns[:user]).to eq user
-      expect(session[:user_id]).to eq user.id.to_s
+      expect(session[:sorcery_user_id]).to eq user.id.to_s
     end
 
     it "login(username,password) returns nil and not set the session when failure" do
@@ -72,7 +72,7 @@ describe SorceryController do
       get :test_login, :email => 'bla@bla.com', :password => 'opensesame!'
 
       expect(assigns[:user]).to be_nil
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
     end
 
     it "login(email,password) returns the user when success and set the session with the _csrf_token" do
@@ -87,7 +87,7 @@ describe SorceryController do
       get :test_login, :email => 'BLA@BLA.COM', :password => 'secret'
 
       expect(assigns[:user]).to be_nil
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
     end
 
     # TODO: move test to model
@@ -97,7 +97,7 @@ describe SorceryController do
       get :test_login, :email => 'BLA@BLA.COM', :password => 'secret'
 
       expect(assigns[:user]).to eq user
-      expect(session[:user_id]).to eq user.id.to_s
+      expect(session[:sorcery_user_id]).to eq user.id.to_s
     end
 
     # TODO: move test to model
@@ -107,7 +107,7 @@ describe SorceryController do
       get :test_login, :email => 'bla1@bla.com', :password => 'secret1'
 
       expect(assigns[:user]).to be_nil
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
     end
 
     # TODO: move test to model
@@ -118,40 +118,40 @@ describe SorceryController do
       get :test_login, :email => 'bla1@bla.com', :password => 'secret1'
 
       expect(assigns[:user]).to eq user
-      expect(session[:user_id]).to eq user.id.to_s
+      expect(session[:sorcery_user_id]).to eq user.id.to_s
     end
 
     it "logout clears the session" do
       cookies[:remember_me_token] = nil
-      session[:user_id] = user.id.to_s
+      session[:sorcery_user_id] = user.id.to_s
       expect(User.sorcery_adapter).to receive(:find_by_id).with("42") { user }
       get :test_logout
 
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
     end
 
     it "logged_in? returns true if logged in" do
-      session[:user_id] = user.id.to_s
+      session[:sorcery_user_id] = user.id.to_s
       expect(User.sorcery_adapter).to receive(:find_by_id).with("42") { user }
 
       expect(subject.logged_in?).to be true
     end
 
     it "logged_in? returns false if not logged in" do
-      session[:user_id] = nil
+      session[:sorcery_user_id] = nil
 
       expect(subject.logged_in?).to be false
     end
 
     it "current_user returns the user instance if logged in" do
-      session[:user_id] = user.id.to_s
+      session[:sorcery_user_id] = user.id.to_s
       expect(User.sorcery_adapter).to receive(:find_by_id).with("42") { user }
 
       2.times { expect(subject.current_user).to eq user } # memoized!
     end
 
     it "current_user returns false if not logged in" do
-      session[:user_id] = nil
+      session[:sorcery_user_id] = nil
       expect(User.sorcery_adapter).to_not receive(:find_by_id)
 
       2.times { expect(subject.current_user).to be_nil } # memoized!
@@ -160,7 +160,7 @@ describe SorceryController do
     specify { should respond_to(:require_login) }
 
     it "calls the configured 'not_authenticated_action' when authenticate before_filter fails" do
-      session[:user_id] = nil
+      session[:sorcery_user_id] = nil
       sorcery_controller_property_set(:not_authenticated_action, :test_not_authenticated_action)
       get :test_logout
 
@@ -170,7 +170,7 @@ describe SorceryController do
     it "require_login before_filter saves the url that the user originally wanted" do
       get :some_action
 
-      expect(session[:return_to_url]).to eq "http://test.host/some_action"
+      expect(session[:sorcery_return_to_url]).to eq "http://test.host/some_action"
       expect(response).to redirect_to("http://test.host/")
     end
 
@@ -178,12 +178,12 @@ describe SorceryController do
       [:post, :put, :delete].each do |m|
         self.send(m, :some_action)
 
-        expect(session[:return_to_url]).to be_nil
+        expect(session[:sorcery_return_to_url]).to be_nil
       end
     end
 
     it "on successful login the user is redirected to the url he originally wanted" do
-      session[:return_to_url] = "http://test.host/some_action"
+      session[:sorcery_return_to_url] = "http://test.host/some_action"
       post :test_return_to, :email => 'bla@bla.com', :password => 'secret'
 
       expect(response).to redirect_to("http://test.host/some_action")
@@ -195,7 +195,7 @@ describe SorceryController do
     specify { should respond_to(:auto_login) }
 
     it "auto_login(user) los in a user instance" do
-      session[:user_id] = nil
+      session[:sorcery_user_id] = nil
       subject.auto_login(user)
 
       expect(subject.logged_in?).to be true
@@ -204,7 +204,7 @@ describe SorceryController do
     it "auto_login(user) works even if current_user was already set to false" do
       get :test_logout
 
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
       expect(subject.current_user).to be_nil
 
       expect(User).to receive(:first) { user }

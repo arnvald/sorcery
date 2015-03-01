@@ -137,7 +137,7 @@ describe SorceryController, :active_record => true do
 
       sorcery_model_property_set(:authentications_class, Authentication)
       expect(User).to receive(:load_from_provider).with(:facebook, '123').and_return(user)
-      get :test_return_to_with_external_facebook, {}, :return_to_url => "fuu"
+      get :test_return_to_with_external_facebook, {}, :sorcery_return_to_url => "fuu"
 
       expect(response).to redirect_to("fuu")
       expect(flash[:notice]).to eq "Success!"
@@ -179,7 +179,7 @@ describe SorceryController, :active_record => true do
 
           sorcery_model_property_set(:authentications_class, Authentication)
           expect(User).to receive(:load_from_provider).with(provider, '123').and_return(user)
-          get :"test_return_to_with_external_#{provider}", {}, :return_to_url => "fuu"
+          get :"test_return_to_with_external_#{provider}", {}, :sorcery_return_to_url => "fuu"
 
           expect(response).to redirect_to "fuu"
           expect(flash[:notice]).to eq "Success!"
@@ -331,18 +331,18 @@ describe SorceryController, :active_record => true do
           expect(User).to receive(:load_from_provider).with(provider.to_sym, '123').and_return(user)
           get "test_login_from_#{provider}".to_sym
 
-          expect(session[:user_id]).not_to be_nil
+          expect(session[:sorcery_user_id]).not_to be_nil
           expect(flash[:notice]).to eq "Success!"
         end
 
         it "resets session after session timeout" do
           expect(User).to receive(:load_from_provider).with(provider.to_sym, '123').and_return(user)
           get "test_login_from_#{provider}".to_sym
-          expect(session[:user_id]).to eq "42"
+          expect(session[:sorcery_user_id]).to eq "42"
           Timecop.travel(Time.now.in_time_zone+0.6)
           get :test_should_be_logged_in
 
-          expect(session[:user_id]).to be_nil
+          expect(session[:sorcery_user_id]).to be_nil
           expect(response).to be_a_redirect
         end
       end

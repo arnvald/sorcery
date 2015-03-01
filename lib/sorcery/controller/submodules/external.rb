@@ -118,9 +118,9 @@ module Sorcery
             if user = user_class.load_from_provider(provider_name, @user_hash[:uid].to_s)
               # we found the user.
               # clear the session
-              return_to_url = session[:return_to_url]
+              return_to_url = session[:sorcery_return_to_url]
               reset_sorcery_session
-              session[:return_to_url] = return_to_url
+              session[:sorcery_return_to_url] = return_to_url
 
               # sign in the user
               auto_login(user, should_remember)
@@ -134,7 +134,6 @@ module Sorcery
           # If user is logged, he can add all available providers into his account
           def add_provider_to_user(provider_name)
             sorcery_fetch_user_hash provider_name
-            config = user_class.sorcery_config
 
             current_user.add_provider_to_user(provider_name.to_s, @user_hash[:uid].to_s)
           end
@@ -176,7 +175,6 @@ module Sorcery
           #
           def create_from(provider_name, &block)
             sorcery_fetch_user_hash provider_name
-            config = user_class.sorcery_config
 
             attrs = user_attrs(@provider.user_info_mapping, @user_hash)
             @user = user_class.create_from_provider(provider_name, @user_hash[:uid], attrs, &block)

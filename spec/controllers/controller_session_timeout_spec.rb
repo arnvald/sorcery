@@ -24,7 +24,7 @@ describe SorceryController do
       login_user user
       get :test_should_be_logged_in
 
-      expect(session[:user_id]).not_to be_nil
+      expect(session[:sorcery_user_id]).not_to be_nil
       expect(response).to be_a_success
     end
 
@@ -33,18 +33,17 @@ describe SorceryController do
       Timecop.travel(Time.now.in_time_zone+0.6)
       get :test_should_be_logged_in
 
-      expect(session[:user_id]).to be_nil
+      expect(session[:sorcery_user_id]).to be_nil
       expect(response).to be_a_redirect
     end
 
     it "works if the session is stored as a string or a Time" do
-      session[:login_time] = Time.now.to_s
-      # TODO: ???
+      session[:sorcery_login_time] = Time.now.to_s
       expect(User).to receive(:authenticate).with('bla@bla.com', 'secret').and_return(user)
 
       get :test_login, :email => 'bla@bla.com', :password => 'secret'
 
-      expect(session[:user_id]).not_to be_nil
+      expect(session[:sorcery_user_id]).not_to be_nil
       expect(response).to be_a_success
     end
 
@@ -57,12 +56,12 @@ describe SorceryController do
         Timecop.travel(Time.now.in_time_zone+0.3)
         get :test_should_be_logged_in
 
-        expect(session[:user_id]).not_to be_nil
+        expect(session[:sorcery_user_id]).not_to be_nil
 
         Timecop.travel(Time.now.in_time_zone+0.3)
         get :test_should_be_logged_in
 
-        expect(session[:user_id]).not_to be_nil
+        expect(session[:sorcery_user_id]).not_to be_nil
         expect(response).to be_a_success
       end
 
@@ -72,7 +71,7 @@ describe SorceryController do
         Timecop.travel(Time.now.in_time_zone+0.6)
         get :test_should_be_logged_in
 
-        expect(session[:user_id]).to be_nil
+        expect(session[:sorcery_user_id]).to be_nil
         expect(response).to be_a_redirect
       end
     end

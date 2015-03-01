@@ -51,7 +51,7 @@ describe SorceryController do
     end
 
     it "logout also calls forget_me!" do
-      session[:user_id] = user.id.to_s
+      session[:sorcery_user_id] = user.id.to_s
 			expect(User.sorcery_adapter).to receive(:find_by_id).with(user.id.to_s).and_return(user)
       expect(user).to receive(:remember_me!)
       expect(user).to receive(:forget_me!)
