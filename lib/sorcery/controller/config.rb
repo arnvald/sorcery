@@ -10,6 +10,8 @@ module Sorcery
                                                       # login, save the URL he wanted to reach,
                                                       # and send him there after login.
 
+                      :clear_csrf_token_on_login,     # when set to false, does not clear token after signing in
+
                       :cookie_domain,                 # set domain option for cookies
 
                       :login_sources,
@@ -29,6 +31,7 @@ module Sorcery
             :@before_logout                        => [],
             :@after_logout                         => [],
             :@save_return_to_url                   => true,
+            :@clear_csrf_token_on_login            => true,
             :@cookie_domain                        => nil
           }
         end

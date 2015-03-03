@@ -21,6 +21,14 @@ Rails.application.config.sorcery.configure do |config|
   # config.save_return_to_url =
 
 
+  # After login, we generate new CSRF token.
+  # This setting allows to keep old token. It can be used e.g. in case when
+  # login request is done via AJAX.
+  # Default: `true`
+  #
+  # config.clear_csrf_token_on_login =
+
+
   # Set domain option for cookies; Useful for remember_me submodule.
   # Default: `nil`
   #

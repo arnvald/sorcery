@@ -82,6 +82,19 @@ describe SorceryController do
       expect(session[:_csrf_token]).not_to be_nil
     end
 
+    it "login(email, password) does not change _csrf_token if setting is set to false" do
+      sorcery_controller_property_set(:clear_csrf_token_on_login, false)
+      get :test_login, {:email => 'bla@bla.com', :password => 'secret', :authenticity_token => 'tkn'}
+
+      expect(session[:_csrf_token]).to eq 'tkn'
+    end
+
+    it "login(email, password) changes _csrf_token by default" do
+      get :test_login, {:email => 'bla@bla.com', :password => 'secret', :authenticity_token => "tkn"}
+
+      expect(session[:_csrf_token]).not_to eq 'tkn'
+    end
+
     it "login(username,password) returns nil and not set the session when upper case username" do
       skip('DM Adapter dependant') if SORCERY_ORM == :data_mapper
       get :test_login, :email => 'BLA@BLA.COM', :password => 'secret'
